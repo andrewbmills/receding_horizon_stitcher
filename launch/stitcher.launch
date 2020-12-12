@@ -1,19 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
-  <!-- <group ns="X1"> -->
-  <node pkg="receding_horizon_stitcher" type="receding_horizon_stitcher_node.py" name="path_stitcher">
-    <param name="rate" value="10.0"/>
-    <param name="fixed_frame" type="string" value="world"/>
-    <param name="t_horizon" value="2.0" />
-    <param name="v_initial" value="1.0" />
-    <remap from="odometry" to="odometry"/>
-    <remap from="path" to="planned_path"/>
-  </node>
-
-  <!-- <node pkg="receding_horizon_stitcher" type="straight_line_path_node.py" name="line_planner" output="screen">
-    <remap from="start" to="odometry_stitch" />
-    <remap from="goal" to="/move_base_simple/goal" />
-    <remap from="path" to="planned_path"/>
-  </node> -->
-  <!-- </group> -->
+  <group ns="X4">
+    <node pkg="receding_horizon_stitcher" type="receding_horizon_stitcher_node.py" name="path_stitcher" output="screen">
+      <param name="rate" value="10.0"/>
+      <param name="fixed_frame" type="string" value="world"/>
+      <param name="t_horizon" value="4.0" />
+      <param name="v_initial" value="1.0" />
+      <remap from="odometry" to="odometry"/>
+      <remap from="path" to="planned_path"/>
+    </node>
+  </group>
 </launch>

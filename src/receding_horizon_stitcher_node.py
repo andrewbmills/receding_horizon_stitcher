@@ -119,7 +119,7 @@ def FindStitchPoint(d_stitch, path, i_start, t_start):
   # Finds the cartesian coordinate position of the point d_stitch distance down the
   # path from the start point p_start = a[i_start] + (b[i_start] - a[i_start])*t_start
   #
-  # Returns the final path point if d_stitch is longer than the path from the start
+  # Returns the start path point if d_stitch is longer than the path from the start
 
   (_,m) = np.shape(path)
 
@@ -240,18 +240,23 @@ class NodeManager:
 
       if (received_new_odometry):
         # Estimate where on the path the robot will be in t_horizon seconds
-        (_, segment_id, t_segment, speed) = self.EstimatePathSpeed()
-        # print("closest path point = [%0.1f, %0.1f, %0.1f]" %(path_point[0], path_point[1], path_point[2]))
-        # print("segment_id = " + str(segment_id), ", t_segment = %0.2f, speed = %0.2f" % (t_segment, speed))
+        (path_point, segment_id, t_segment, speed) = self.EstimatePathSpeed()
+        print("closest path point = [%0.1f, %0.1f, %0.1f]" %(path_point[0], path_point[1], path_point[2]))
+        print("segment_id = " + str(segment_id), ", t_segment = %0.2f, speed = %0.2f" % (t_segment, speed))
         self.path_speed_history = np.hstack((self.path_speed_history[1:], speed)) # Update path speed history queue
         # self.v_estimate = np.average(self.path_speed_history)
         (stitch_point, i_stitch, t_stitch, orientation_stitch) = FindStitchPoint(self.v_estimate*self.t_horizon, self.path_mat_stitched, segment_id, t_segment)
-        # print("stitch_point = [%0.1f, %0.1f, %0.1f]" %(stitch_point[0], stitch_point[1], stitch_point[2]))
-        # print("stitch_id = " + str(i_stitch), ", t_segment = %0.2f" % (t_stitch))
+        print("stitch_point = [%0.1f, %0.1f, %0.1f]" %(stitch_point[0], stitch_point[1], stitch_point[2]))
+        print("stitch_id = " + str(i_stitch), ", t_segment = %0.2f" % (t_stitch))
         self.pub_odometry.publish(ConvertPoseToOdometryMsg(stitch_point, self.fixed_frame, rospy.Time.now(), orientation=orientation_stitch))
         self.state_previous = self.state
 
       if (received_new_path):
+        # check if the new path has nans in it
+        if (np.sum(np.sum(np.isnan(self.path_mat)))):
+          print("Most recent path contained nans, waiting for new message.")
+          continue
+
         # Stitch the new path into previous path
         (stitch_point, i_stitch, t_stitch) = CalculateCrosstrack(np.array([self.path_mat[:,0]]).T, self.path_mat_stitched)
         (path_origin, i_origin, _, _) = FindStitchPoint(2*self.v_estimate*self.t_horizon, np.flip(self.path_mat_stitched, 1), np.size(self.path_mat_stitched, 1) - i_stitch, 1.0-t_stitch)
