@@ -115,6 +115,12 @@ def ConvertMatrixToPathMsg(mat, frame_id, stamp):
     msg.poses.append(pose)
   return msg
 
+def CheckPathMsgIsEmpty(pathMsg):
+  if (len(pathMsg.poses) == 0):
+    return True
+  else:
+    return False
+
 def FindStitchPoint(d_stitch, path, i_start, t_start):
   # Finds the cartesian coordinate position of the point d_stitch distance down the
   # path from the start point p_start = a[i_start] + (b[i_start] - a[i_start])*t_start
@@ -173,11 +179,13 @@ def FindStitchPoint(d_stitch, path, i_start, t_start):
 
 class NodeManager:
   def GetPath(self, msg):
+    if CheckPathMsgIsEmpty(msg):
+      return
+    
     self.path = msg
     if (self.path.header.stamp.to_sec() == 0.0):
       self.path.header.stamp = rospy.Time.now()
     self.path_mat = ConvertPathToMatrix(msg)
-    # print("Received new path!")
     return
 
   def GetState(self, msg):
